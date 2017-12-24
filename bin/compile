@@ -28,6 +28,14 @@ fi
 mkdir -p $CACHE_DIR
 cd $CACHE_DIR
 
+# we need libsasl2-dev
+needed=( libsasl2-dev )
+missing=$(comm -1 -3 <(dpkg-query -W -f '${package}\n' | sort) <(IFS=$'\n'; echo "${needed[*]}" | sort))
+if [[ "$missing" ]]; then
+    apt-get update -qq || { echo "Failed to 'apt-get update'. You must build this formula using Docker."; exit 1; }
+    apt-get install -q -y $missing
+fi
+
 # remove old, pre-installed librdkafka during this build, it'll be there again once slug is deployed
 if [ -z "${KEEP_LIBRDKAFKA_DPKG}" ]; then
    set +e
